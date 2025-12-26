@@ -1,0 +1,675 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- ADD THIS: proper mobile scaling -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>HBD love</title>	    
+    <link type="text/css" rel="stylesheet" href="file/default.css">
+    <script type="text/javascript" src="file/jquery.min.js"></script>
+    <script type="text/javascript" src="file/jscex.min.js"></script>
+    <script type="text/javascript" src="file/jscex-parser.js"></script>
+    <script type="text/javascript" src="file/jscex-jit.js"></script>
+    <script type="text/javascript" src="file/jscex-builderbase.min.js"></script>
+    <script type="text/javascript" src="file/jscex-async.min.js"></script>
+    <script type="text/javascript" src="file/jscex-async-powerpack.min.js"></script>
+    <script type="text/javascript" src="file/function.js" charset="utf-8"></script>
+    <script type="text/javascript" src="file/love.js" charset="utf-8"></script>
+   
+    <!-- File 2's CSS (Diamond Rain Theme) -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a1a; /* Cosmic background from File 2 */
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+        
+        #main {
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+        
+        #wrap {
+            position: relative;
+            margin: 0 auto;
+            width: 1100px;
+            height: 680px;
+            margin-top: 10px;
+            z-index: 2;
+        }
+        
+        #text {
+            width: 272px;
+            height: 560px;
+            left: 188px;
+            top: 10px;
+            position: absolute;
+            font-size: 15px;
+        }
+        
+        #code {
+            display: none;
+            color: #b9f2ff; /* Diamond blue from File 2 */
+            font-size: 14px;
+            margin-top: 32px;
+            line-height: 18px;
+           
+        }
+        
+        #clock-box {
+            position: absolute;
+            left: 60px;
+            top: 550px;
+            font-size: 28px;
+            display: none;
+            color: #b9f2ff;
+            text-shadow: 0 0 10px rgba(185, 242, 255, 0.5);
+        }
+        
+        #canvas {
+            margin: 0 auto;
+            width: 1100px;
+            height: 680px;
+            position: relative;
+            z-index: 3;
+        }
+        
+        #error {
+            margin: 0 auto;
+            text-align: center;
+            margin-top: 60px;
+            display: none;
+            color: white;
+        }
+        
+        .hand {
+            cursor: pointer;
+        }
+        
+        .say {
+            margin-left: 5px;
+            color: #b9f2ff;
+            font-size: 16px;
+        }
+        
+        /* Diamond Rain Background Elements (from File 2) */
+        .diamond-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .background-stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .diamond {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            transform: rotate(45deg);
+            pointer-events: none;
+            filter: drop-shadow(0 0 3px currentColor);
+            animation: diamondFall linear infinite;
+        }
+        
+        @keyframes diamondFall {
+            to {
+                transform: translateY(100vh) rotate(calc(var(--rotation) + 360deg));
+            }
+        }
+        
+        .micro-diamond {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.8);
+            transform: rotate(45deg);
+            pointer-events: none;
+            filter: blur(0.3px);
+            animation: microDiamondFall linear infinite;
+        }
+        
+        @keyframes microDiamondFall {
+            to {
+                transform: translateY(100vh) translateX(var(--drift)) rotate(720deg);
+            }
+        }
+        
+        .collection-area {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, 
+                rgba(185, 242, 255, 0.3) 0%,
+                rgba(255, 182, 193, 0.2) 30%,
+                transparent 100%);
+            backdrop-filter: blur(5px);
+            z-index: 1;
+        }
+        
+        .light-beam {
+            position: absolute;
+            width: 1px;
+            height: 0;
+            background: linear-gradient(to bottom, 
+                transparent,
+                rgba(185, 242, 255, 0.8),
+                transparent);
+            animation: beamFlash 0.5s ease-out forwards;
+            transform-origin: bottom;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        @keyframes beamFlash {
+            to {
+                height: 100px;
+                opacity: 0;
+            }
+        }
+        
+        .star {
+            position: absolute;
+            width: 0.5px;
+            height: 0.5px;
+            background: white;
+            border-radius: 50%;
+            animation: starTwinkle 3s infinite;
+        }
+        
+        @keyframes starTwinkle {
+            0%, 100% {
+                opacity: 0.1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.5);
+            }
+        }
+        
+        /* File 2's Controls Styling (Adapted) */
+        .diamond-controls {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+        
+        .control-btn {
+            background: rgba(185, 242, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(185, 242, 255, 0.4);
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        
+        .control-btn:hover {
+            background: rgba(185, 242, 255, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(185, 242, 255, 0.3);
+        }
+        
+        .diamond-stats {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            color: white;
+            background: rgba(185, 242, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(185, 242, 255, 0.3);
+            z-index: 10;
+        }
+        
+        .diamond-count {
+            font-size: 2rem;
+            color: #b9f2ff;
+            font-weight: bold;
+        }
+    </style>
+    
+    <!-- File 1's JavaScript Libraries -->
+    <script type="text/javascript" src="file/jquery.min.js"></script>
+    <script type="text/javascript" src="file/jscex.min.js"></script>
+    <script type="text/javascript" src="file/jscex-parser.js"></script>
+    <script type="text/javascript" src="file/jscex-jit.js"></script>
+    <script type="text/javascript" src="file/jscex-builderbase.min.js"></script>
+    <script type="text/javascript" src="file/jscex-async.min.js"></script>
+    <script type="text/javascript" src="file/jscex-async-powerpack.min.js"></script>
+    <script type="text/javascript" src="file/function.js" charset="utf-8"></script>
+    <script type="text/javascript" src="file/love.js" charset="utf-8"></script>
+    
+    <!-- Audio Play Function (from File 1) -->
+    <script>
+        function playAudio() {
+            var audio = document.getElementById("myAudio");
+            audio.play();
+        }
+    </script>
+
+<script>
+// This function will play the last 30 seconds on loop
+function playLast30SecondsLoop() {
+    var audio = document.getElementById("myAudio");
+    
+    // When audio is ready (knows its duration)
+    function startLoop() {
+        // For 2:30 song (150 seconds), start at 120 seconds (2:00)
+        audio.currentTime = 127; // 150 - 30 = 120
+        
+        // Set up the loop to always play last 30 seconds
+        audio.addEventListener('timeupdate', function() {
+            // If we reach the end (150 seconds) or go beyond
+            if (audio.currentTime >= 155) {
+                audio.currentTime = 127; // Jump back to 2:00
+            }
+        });
+        
+        audio.loop = true;
+        audio.play().catch(function(e) {
+            console.log("Audio play failed, might need user interaction");
+        });
+    }
+    
+    // If duration is already known
+    if (audio.duration && audio.duration >= 155) {
+        startLoop();
+    } else {
+        // Wait for duration to load
+        audio.addEventListener('loadedmetadata', startLoop);
+        audio.load(); // Force load the audio
+    }
+}
+
+// Call this when page loads (autoplay)
+window.addEventListener('load', function() {
+    // Small delay to ensure everything is ready
+    setTimeout(playLast30SecondsLoop, 1000);
+});
+
+// Also update your existing playAudio function to use this:
+function playAudio() {
+    playLast30SecondsLoop();
+}
+</script>
+
+</head>
+<body>
+    <!-- Diamond Rain Background Elements (from File 2) -->
+    <div class="diamond-rain" id="diamondRain"></div>
+    <div class="background-stars" id="backgroundStars"></div>
+    <div class="collection-area"></div>
+    
+    <!-- Diamond Stats (from File 2 - as decoration) -->
+    
+    <!-- File 1's Main Content (unchanged functionality) -->
+    <div id="main">
+        <div id="error">
+            <a href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI">Chrome</a> 
+            (<a href="http://firefox.com.cn/download/">Firefox</a>)
+        </div>
+        
+       <audio id="myAudio" preload="metadata">
+    <source src="aud.mp3" type="audio/mp3" />
+</audio>
+
+        
+        <div id="wrap">
+            <div id="text">
+                <div id="code">
+                    <span class="say">It’s our 4th month anniversary… and the world is wrapped in Christmas lights. But today, I realized something. 🎄 💞</span><br>
+                    <span class="say">The most beautiful light isn’t on any tree. It’s the one you sparked in my soul [Number] months ago—a gentle, steady flame that has quietly lit up every corner of my being. ✨ 🍀</span><br>
+                    <span class="say">Every moment with you feels like unwrapping the most precious gift, layer by layer, and finding something more wonderful underneath—your kindness, your strength, the beautiful depth of your heart. 🎁🤍</span><br>
+                    <span class="say">So while the world sings of a silent night, my heart is singing a symphony for you. It sings of [Number] months of your laughter being my favorite sound, your thoughts becoming my favorite conversation, and your love becoming my safest place. 🎶</span><br>
+                    <span class="say">I REAALY REALLY LOVE YOU ❤️</span><br>
+                    <span class="say">And just as my love for you grows. So do my fears</span><br>
+                    <span class="say">But you're My peace, My Home. You have all my trust and love. 
+                        Justina & Emmanuel❤️
+                    </span><br>
+                </div>
+            </div>
+            <div id="clock-box">
+                <span id="clock">577 days 0 hours 0 minutes 0 seconds</span>
+            </div>
+            <canvas id="canvas" width="1100" height="680"></canvas>
+        </div>
+    </div>
+    
+    <!-- Diamond Controls (from File 2 - for visual consistency) -->
+
+
+    <!-- File 1's Main JavaScript (unchanged) -->
+    <script>
+    (function() {
+        var canvas = $('#canvas');
+        
+        if (!canvas[0].getContext) {
+            $("#error").show();
+            return false;
+        }
+
+        var width = canvas.width();
+        var height = canvas.height();        
+        canvas.attr("width", width);
+        canvas.attr("height", height);
+
+        var opts = {
+            seed: {
+                x: width / 2 - 20,
+                color: "rgb(190, 26, 37)",
+                scale: 2
+            },
+            branch: [
+                [535, 680, 570, 250, 500, 200, 30, 100, [
+                    [540, 500, 455, 417, 340, 400, 13, 100, [
+                        [450, 435, 434, 430, 394, 395, 2, 40]
+                    ]],
+                    [550, 445, 600, 356, 680, 345, 12, 100, [
+                        [578, 400, 648, 409, 661, 426, 3, 80]
+                    ]],
+                    [539, 281, 537, 248, 534, 217, 3, 40],
+                    [546, 397, 413, 247, 328, 244, 9, 80, [
+                        [427, 286, 383, 253, 371, 205, 2, 40],
+                        [498, 345, 435, 315, 395, 330, 4, 60]
+                    ]],
+                    [546, 357, 608, 252, 678, 221, 6, 100, [
+                        [590, 293, 646, 277, 648, 271, 2, 80]
+                    ]]
+                ]] 
+            ],
+            bloom: {
+                num: 700,
+                width: 1080,
+                height: 650,
+            },
+            footer: {
+                width: 1200,
+                height: 5,
+                speed: 10,
+            }
+        }
+
+        var tree = new Tree(canvas[0], width, height, opts);
+        var seed = tree.seed;
+        var foot = tree.footer;
+        var hold = 1;
+
+        canvas.click(function(e) {
+            playAudio();
+            var offset = canvas.offset(), x, y;
+            x = e.pageX - offset.left;
+            y = e.pageY - offset.top;
+            if (seed.hover(x, y)) {
+                hold = 0; 
+                canvas.unbind("click");
+                canvas.unbind("mousemove");
+                canvas.removeClass('hand');
+            }
+        }).mousemove(function(e) {
+            var offset = canvas.offset(), x, y;
+            x = e.pageX - offset.left;
+            y = e.pageY - offset.top;
+            canvas.toggleClass('hand', seed.hover(x, y));
+        });
+
+        var seedAnimate = eval(Jscex.compile("async", function () {
+            seed.draw();
+            while (hold) {
+                $await(Jscex.Async.sleep(10));
+            }
+            while (seed.canScale()) {
+                seed.scale(0.95);
+                $await(Jscex.Async.sleep(10));
+            }
+            while (seed.canMove()) {
+                seed.move(0, 2);
+                foot.draw();
+                $await(Jscex.Async.sleep(10));
+            }
+        }));
+
+        var growAnimate = eval(Jscex.compile("async", function () {
+            do {
+                tree.grow();
+                $await(Jscex.Async.sleep(10));
+            } while (tree.canGrow());
+        }));
+
+        var flowAnimate = eval(Jscex.compile("async", function () {
+            do {
+                tree.flower(2);
+                $await(Jscex.Async.sleep(10));
+            } while (tree.canFlower());
+        }));
+
+        var moveAnimate = eval(Jscex.compile("async", function () {
+            tree.snapshot("p1", 240, 0, 610, 680);
+            while (tree.move("p1", 500, 0)) {
+                foot.draw();
+                $await(Jscex.Async.sleep(10));
+            }
+            foot.draw();
+            tree.snapshot("p2", 500, 0, 610, 680);
+
+            canvas.parent().css("background", "url(" + tree.toDataURL('image/png') + ")");
+            canvas.css("background", "#ffe");
+            $await(Jscex.Async.sleep(300));
+            canvas.css("background", "none");
+        }));
+
+        var textAnimate = eval(Jscex.compile("async", function () {
+            $("#code").show().typewriter();
+        }));
+        
+        var runAsync = eval(Jscex.compile("async", function () {
+            $await(seedAnimate());
+            $await(growAnimate());
+            $await(flowAnimate());
+            $await(moveAnimate());
+            textAnimate().start();
+        }));
+
+        runAsync().start();
+    })();
+    </script>
+    
+    <!-- File 2's Diamond Rain JavaScript (for background effects only) -->
+    <script>
+        // Diamond Rain Background Effects (from File 2, simplified)
+        const diamondRain = document.getElementById('diamondRain');
+        const backgroundStars = document.getElementById('backgroundStars');
+        const diamondCount = document.getElementById('diamondCount');
+        const value = document.getElementById('value');
+        const intensity = document.getElementById('intensity');
+        
+        let diamondTotal = 0;
+        let rainIntensity = 30; // Lower intensity as background
+        
+        // Diamond colors
+        const diamondColors = [
+            '#b9f2ff', '#ffffff', '#fffafa', 
+            '#e6f2ff', '#ffe6f2', '#f0f8ff', '#f8f8ff'
+        ];
+        
+        // Create background stars
+        function createStars() {
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = 2 + Math.random() * 4 + 's';
+                
+                backgroundStars.appendChild(star);
+            }
+        }
+        
+        // Create a diamond (simplified for background)
+        function createDiamond(isMicro = false) {
+            const diamond = document.createElement('div');
+            
+            if (isMicro) {
+                diamond.className = 'micro-diamond';
+            } else {
+                diamond.className = 'diamond';
+            }
+            
+            // Random position at top
+            diamond.style.left = Math.random() * 100 + '%';
+            diamond.style.top = '-10px';
+            
+            // Random diamond color
+            diamond.style.color = diamondColors[Math.floor(Math.random() * diamondColors.length)];
+            diamond.style.background = diamond.style.color;
+            
+            // Random size
+            if (!isMicro) {
+                const size = 1 + Math.random() * 2;
+                diamond.style.width = `${size}px`;
+                diamond.style.height = `${size}px`;
+            }
+            
+            // Random rotation
+            const rotation = Math.random() * 360;
+            diamond.style.setProperty('--rotation', `${rotation}deg`);
+            
+            // Random fall speed (slower for background)
+            const duration = 5 + Math.random() * 10;
+            diamond.style.animationDuration = duration + 's';
+            diamond.style.animationDelay = Math.random() * 2 + 's';
+            
+            // Add drift for micro diamonds
+            if (isMicro) {
+                const drift = (Math.random() - 0.5) * 30;
+                diamond.style.setProperty('--drift', `${drift}px`);
+            }
+            
+            diamondRain.appendChild(diamond);
+            
+            if (!isMicro) {
+                diamondTotal++;
+                diamondCount.textContent = diamondTotal;
+                
+                // Update value based on count
+                if (diamondTotal < 50) {
+                    value.textContent = 'Priceless';
+                } else if (diamondTotal < 200) {
+                    value.textContent = 'Infinite';
+                } else {
+                    value.textContent = '∞';
+                }
+            }
+            
+            // Remove after animation
+            setTimeout(() => {
+                if (diamond.parentNode) {
+                    diamond.remove();
+                    if (!isMicro) {
+                        diamondTotal--;
+                        diamondCount.textContent = diamondTotal;
+                    }
+                }
+            }, duration * 1000);
+            
+            return diamond;
+        }
+        
+        // Start diamond rain (background only)
+        function startRain() {
+            // Create initial diamonds (fewer for background)
+            for (let i = 0; i < rainIntensity; i++) {
+                setTimeout(() => createDiamond(), i * 200);
+            }
+            
+            // Create micro diamonds
+            for (let i = 0; i < rainIntensity * 1.5; i++) {
+                setTimeout(() => createDiamond(true), i * 100);
+            }
+        }
+        
+        // Control functions (adapted for background)
+        function increaseRain() {
+            rainIntensity = Math.min(50, rainIntensity + 5);
+            intensity.textContent = '✨'.repeat(Math.ceil(rainIntensity / 10));
+            
+            // Add a few more diamonds
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => createDiamond(), i * 100);
+            }
+        }
+        
+        function createShower() {
+            // Create a small shower effect
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    createDiamond(i % 3 === 0);
+                }, i * 50);
+            }
+            
+            value.textContent = 'MAGICAL';
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                value.textContent = diamondTotal < 200 ? 'Infinite' : '∞';
+            }, 3000);
+        }
+        
+        // Initialize diamond rain background
+        createStars();
+        startRain();
+        
+        // Auto rain interval (slower for background)
+        setInterval(() => {
+            for (let i = 0; i < rainIntensity / 30; i++) {
+                createDiamond(Math.random() > 0.5);
+            }
+        }, 2000);
+        
+        // Click to create diamond burst (optional)
+        document.addEventListener('click', (e) => {
+            // Only create burst if not clicking on canvas (to not interfere with tree)
+            if (!e.target.closest('#canvas')) {
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const diamond = createDiamond();
+                        diamond.style.left = e.clientX + Math.random() * 100 - 50 + 'px';
+                        diamond.style.top = e.clientY + 'px';
+                        diamond.style.animationDuration = '2s';
+                    }, i * 100);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
